@@ -47,8 +47,7 @@ class Dishes(Resource):
         return response.text
     # GET will return the JSON object listing all dishes, indexed by ID
     def get(self):
-        print(dishes) #DEBUG
-        return ""
+        return dishes
     
     #Deleting all dishes not allowed
     def delete(self):
@@ -70,12 +69,17 @@ class Dish_ID(Resource):
 
 class Dish_Name(Resource):
     def get(self, name):
-        for id in dishes:
-            if name in dishes[id]["name"]:
-                return dishes[id]
-        return ""
+        for i in dishes:
+            if name in dishes[i].values():
+                return dishes[i], 200
+        return -5, 404
+    
     def delete(self, name):
-        return ""
+        for i in dishes:
+            if name in dishes[i].values():
+                dishes.pop(i)
+                return i, 200
+        return -5, 404
 
 class Meals(Resource):
     def post(self):
