@@ -44,7 +44,12 @@ class Dishes(Resource):
         data = request.json
         #attempt to GET dish information from nutritional API
         query = data.get('name')
-        nextID = max(int(id) for id in dishes.keys()) + 1
+
+        try:
+            nextID = max(int(id) for id in dishes.keys()) + 1
+        except:
+            nextID = 1
+
         api_url = 'https://api.api-ninjas.com/v1/nutrition?query={}'.format(query)
         response = requests.get(api_url, headers={'X-Api-Key': 'Igzod2YKnAdshNgN8f2ORQ==nxXDcDaEXB2TNq8U'})
         keys = {"name": "name", "calories": "cal", "serving_size_g": "size", "sodium_mg": "sodium", "sugar_g": "sugar"}
@@ -124,7 +129,10 @@ class Meals(Resource):
         
         # If there are no issues add the meal
         if appetizer in dishes.keys() and main in dishes.keys() and dessert in dishes.keys():
-            nextID = max(int(id) for id in meals.keys()) + 1
+            try:
+                nextID = max(int(id) for id in meals.keys()) + 1
+            except:
+                nextID = 1
             meals[nextID] = data
             meals[nextID]["ID"] = nextID
             meals[nextID]["cal"] = float(dishes[appetizer]["cal"]) + float(dishes[main]["cal"]) + float(dishes[dessert]["cal"])
@@ -140,27 +148,80 @@ class Meals(Resource):
     def get(self):
         return meals
 
-class Meal(Resource):
+class Meal_ID(Resource):
     # /meals/{ID}
-    def put(self, ID):
-        return ""
-    def get(self, ID):
-        return ""
-    def delete(self, ID):
-        return ""
+    def put(self, id):
+        if id in meals:
+                # Get the JSON request
+            try:
+                data = request.json
+            
+            # If request content-type is not application/json
+            except:
+                return 0, 415
+            
+            # Check if the id matches the name
+            if data.get('name') != meals[id]['name']:
+                    return -2, 422
+                
+            #attempt to GET dish information 
+            try:
+                appetizer = int(data.get('appetizer'))
+                main = int(data.get('main'))
+                dessert = int(data.get('dessert'))
+            
+            # One of the required parameters was not given or not specified correctly
+            except:
+                return -1, 422
+            
+            # If there are no issues add the meal
+            if appetizer in dishes.keys() and main in dishes.keys() and dessert in dishes.keys():
+                meals[id] = data
+                meals[id]["ID"] = id
+                meals[id]["cal"] = float(dishes[appetizer]["cal"]) + float(dishes[main]["cal"]) + float(dishes[dessert]["cal"])
+                meals[id]["sodium"] =  float(dishes[appetizer]["sodium"]) + float(dishes[main]["sodium"]) + float(dishes[dessert]["sodium"])
+                meals[id]["sugar"] = float(dishes[appetizer]["sugar"]) + float(dishes[main]["sugar"]) + float(dishes[dessert]["sugar"])
+                print(meals) #FOR DEBUGGING
+                return id, 201
+            
+            # If one of the sent dishes does not exists
+            else:
+                return -6, 422
+        return "Error: no such id exists", 422
     
+    def get(self, id):
+        if id in meals:
+            return meals[id], 200
+        else:
+            return -5, 404
+        
+    def delete(self, id):
+        if id in meals:
+            meals.pop(id)
+            return id, 200
+        else:
+            return -5, 404
+
+class Meal_Name(Resource):    
     # /meals/{name}
     def get(self, name):
-        return ""
+        for id in meals:
+            if meals[id]["name"] == name:
+                return meals[id], 200
+        return -5, 404
     def delete(self, name):
-        return ""
+        for id in meals:
+            if meals[id]["name"] == name:
+                meals.pop(id)
+                return id, 200
+        return -5, 404
 
 api.add_resource(Dishes, '/dishes')
 api.add_resource(Dish_ID, '/dishes/<int:id>')
 api.add_resource(Dish_Name, '/dishes/<string:name>')
 api.add_resource(Meals, '/meals')
-# api.add_resource(Meal, '/meals/<ID>')
-# api.add_resource(Meal, '/meals/<name>')
+api.add_resource(Meal_ID, '/meals/<int:id>')
+api.add_resource(Meal_Name, '/meals/<string:name>')
 
 if __name__ == '__main__':
     print("running meals.py")
