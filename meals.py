@@ -7,11 +7,27 @@ import pprint
 app = Flask("meals")
 api = Api(app)
 dishes = dict()
+meals = dict()
 parser = reqparse.RequestParser()
 
 #test 
 dishes = {
-    234: {"first element": "test1",},
+    1: {"name": "apple", "ID": 1, "cal": 2, "size": 34.0, "sodium": 70, "sugar": 8},
+    2: {"name": "focaccia", "ID": 2, "cal": 9, "size": 100.0, "sodium": 570, "sugar": 1.8},
+    3: {"name": "Chicken", "ID": 3, "cal": 1, "size": 10.0, "sodium": 20, "sugar": 3},
+}
+
+#test
+meals = {
+    1: {"name": "chicken special", 
+    "ID": 1,
+    "appetizer": 3,
+    "main": 2,
+    "dessert": 1,
+    "cal": 12,
+    "sodium": 660,
+    "sugar": 12.8},
+
 }
 
 # global nextID #DEBUG - nextID must be initiated 
@@ -31,16 +47,16 @@ class Dishes(Resource):
         nextID = max(int(id) for id in dishes.keys()) + 1
         api_url = 'https://api.api-ninjas.com/v1/nutrition?query={}'.format(query)
         response = requests.get(api_url, headers={'X-Api-Key': 'Igzod2YKnAdshNgN8f2ORQ==nxXDcDaEXB2TNq8U'})
-        keys = ["name", "calories", "serving_size_g", "sodium_mg", "sugar_g"] 
+        keys = {"name": "name", "calories": "cal", "serving_size_g": "size", "sodium_mg": "sodium", "sugar_g": "sugar"}
         if response.status_code == requests.codes.ok: #not handling error correctly
             # response["ID"] = nextID
-            dishes[nextID] = {key: response.json()[i][key] for key in keys for i in range(len(response.json()))}
+            dishes[nextID] = {val: response.json()[i][key] for key, val in keys for i in range(len(response.json()))}
             # dishes[nextID] = response.json()
             dishes[nextID]["ID"] = nextID
             print(dishes)
             # print(response.text) #DEBUGGING 
             # print(dishes) #DEBUGGING
-            return 201
+            return nextID, 201
         else:
             print("Error:", response.status_code, response.text)
 
@@ -83,9 +99,46 @@ class Dish_Name(Resource):
 
 class Meals(Resource):
     def post(self):
-        return ""
+         # Get the JSON request
+        try:
+            data = request.json
+        
+        # If request content-type is not application/json
+        except:
+            return 0, 415
+        
+        # Check if meal exists
+        for i in meals:
+            if data.get('name') == meals[i]["name"]:
+                return -2, 422
+            
+        #attempt to GET dish information 
+        try:
+            appetizer = int(data.get('appetizer'))
+            main = int(data.get('main'))
+            dessert = int(data.get('dessert'))
+        
+        # One of the required parameters was not given or not specified correctly
+        except:
+            return -1, 422
+        
+        # If there are no issues add the meal
+        if appetizer in dishes.keys() and main in dishes.keys() and dessert in dishes.keys():
+            nextID = max(int(id) for id in meals.keys()) + 1
+            meals[nextID] = data
+            meals[nextID]["ID"] = nextID
+            meals[nextID]["cal"] = float(dishes[appetizer]["cal"]) + float(dishes[main]["cal"]) + float(dishes[dessert]["cal"])
+            meals[nextID]["sodium"] =  float(dishes[appetizer]["sodium"]) + float(dishes[main]["sodium"]) + float(dishes[dessert]["sodium"])
+            meals[nextID]["sugar"] = float(dishes[appetizer]["sugar"]) + float(dishes[main]["sugar"]) + float(dishes[dessert]["sugar"])
+            print(meals) #FOR DEBUGGING
+            return nextID, 201
+        
+        # If one of the sent dishes does not exists
+        else:
+            return -6, 422
+    
     def get(self):
-        return ""
+        return meals
 
 class Meal(Resource):
     # /meals/{ID}
@@ -105,7 +158,7 @@ class Meal(Resource):
 api.add_resource(Dishes, '/dishes')
 api.add_resource(Dish_ID, '/dishes/<int:id>')
 api.add_resource(Dish_Name, '/dishes/<string:name>')
-# api.add_resource(Meals, '/meals')
+api.add_resource(Meals, '/meals')
 # api.add_resource(Meal, '/meals/<ID>')
 # api.add_resource(Meal, '/meals/<name>')
 
