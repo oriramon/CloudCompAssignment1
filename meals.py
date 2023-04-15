@@ -55,7 +55,8 @@ class Dishes(Resource):
         keys = {"name": "name", "calories": "cal", "serving_size_g": "size", "sodium_mg": "sodium", "sugar_g": "sugar"}
         if response.status_code == requests.codes.ok: #not handling error correctly
             # response["ID"] = nextID
-            dishes[nextID] = {val: response.json()[i][key] for key, val in keys for i in range(len(response.json()))}
+            # print(response.json)
+            dishes[nextID] = {val: response.json()[0][key] for key, val in keys for i in range(len(response.json()))}
             # dishes[nextID] = response.json()
             dishes[nextID]["ID"] = nextID
             print(dishes)
