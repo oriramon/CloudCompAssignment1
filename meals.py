@@ -13,8 +13,8 @@ parser = reqparse.RequestParser()
 #test 
 dishes = {
     1: {"name": "apple", "ID": 1, "cal": 2, "size": 34.0, "sodium": 70, "sugar": 8},
-    2: {"name": "focaccia", "ID": 2, "cal": 9, "size": 100.0, "sodium": 570, "sugar": 1.8},
-    3: {"name": "Chicken", "ID": 3, "cal": 1, "size": 10.0, "sodium": 20, "sugar": 3},
+    # 2: {"name": "focaccia", "ID": 2, "cal": 9, "size": 100.0, "sodium": 570, "sugar": 1.8},
+    # 3: {"name": "Chicken", "ID": 3, "cal": 1, "size": 10.0, "sodium": 20, "sugar": 3},
 }
 
 #test
@@ -44,7 +44,6 @@ class Dishes(Resource):
         data = request.json
         #attempt to GET dish information from nutritional API
         query = data.get('name')
-
         try:
             nextID = max(int(id) for id in dishes.keys()) + 1
         except:
@@ -52,16 +51,12 @@ class Dishes(Resource):
 
         api_url = 'https://api.api-ninjas.com/v1/nutrition?query={}'.format(query)
         response = requests.get(api_url, headers={'X-Api-Key': 'Igzod2YKnAdshNgN8f2ORQ==nxXDcDaEXB2TNq8U'})
-        keys = {"name": "name", "calories": "cal", "serving_size_g": "size", "sodium_mg": "sodium", "sugar_g": "sugar"}
+        keys = {"calories": "cal", "serving_size_g": "size", "sodium_mg": "sodium", "sugar_g": "sugar"}
         if response.status_code == requests.codes.ok: #not handling error correctly
-            # response["ID"] = nextID
-            # print(response.json)
-            dishes[nextID] = {val: response.json()[0][key] for key, val in keys for i in range(len(response.json()))}
-            # dishes[nextID] = response.json()
+            dishes[nextID] = {keys[k]: sum(d[k] for d in response.json() if k in keys) for k in set(k for d in response.json() for k in d if k in keys)}
             dishes[nextID]["ID"] = nextID
+            dishes[nextID]["name"] = query
             print(dishes)
-            # print(response.text) #DEBUGGING 
-            # print(dishes) #DEBUGGING
             return nextID, 201
         else:
             print("Error:", response.status_code, response.text)
