@@ -41,9 +41,18 @@ class Dishes(Resource):
     # POST may also return a non-positive ID
     def post(self):
         # Get the JSON request
-        data = request.json
-        #attempt to GET dish information from nutritional API
+        try:
+            data = request.json
+        # Check if content-type is not application/json
+        except:
+            return 0, 415
         query = data.get('name')
+        #'name' parameter was not specified in the message body
+        if query == None:
+            return -1, 422
+        #dish of given name already exists
+        elif query in [dish['name'] for dish in dishes.values()]:
+            return -2, 422
         try:
             nextID = max(int(id) for id in dishes.keys()) + 1
         except:
@@ -52,16 +61,20 @@ class Dishes(Resource):
         api_url = 'https://api.api-ninjas.com/v1/nutrition?query={}'.format(query)
         response = requests.get(api_url, headers={'X-Api-Key': 'Igzod2YKnAdshNgN8f2ORQ==nxXDcDaEXB2TNq8U'})
         keys = {"calories": "cal", "serving_size_g": "size", "sodium_mg": "sodium", "sugar_g": "sugar"}
-        if response.status_code == requests.codes.ok: #not handling error correctly
+
+        #api-ninjas does not recognize this dish name, response is empty
+        if not response.json():
+            return -3, 422
+        elif response.status_code == requests.codes.ok:
             dishes[nextID] = {keys[k]: sum(d[k] for d in response.json() if k in keys) for k in set(k for d in response.json() for k in d if k in keys)}
             dishes[nextID]["ID"] = nextID
             dishes[nextID]["name"] = query
-            print(dishes)
+            print(dishes) #DEBUG
             return nextID, 201
         else:
-            print("Error:", response.status_code, response.text)
-
-        return response.text
+            return -4, 504
+            # print("Error:", response.status_code, response.text)
+    
     # GET will return the JSON object listing all dishes, indexed by ID
     def get(self):
         return dishes
