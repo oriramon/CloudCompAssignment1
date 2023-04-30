@@ -225,4 +225,4 @@ api.add_resource(Meal_Name, '/meals/<string:name>')
 
 if __name__ == '__main__':
     print("running rest-word-svr-v1.py")
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    # app.run(host='0.0.0.0', port=8000, debug=True)
