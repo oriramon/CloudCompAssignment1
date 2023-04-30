@@ -59,8 +59,7 @@ class Dishes(Resource):
             # dishes[nextID] = response.json()
             dishes[nextID]["ID"] = nextID
             print(dishes)
-            # print(response.text) #DEBUGGING 
-            # print(dishes) #DEBUGGING
+            
             return nextID, 201
         else:
             print("Error:", response.status_code, response.text)
@@ -138,7 +137,7 @@ class Meals(Resource):
             meals[nextID]["cal"] = float(dishes[appetizer]["cal"]) + float(dishes[main]["cal"]) + float(dishes[dessert]["cal"])
             meals[nextID]["sodium"] =  float(dishes[appetizer]["sodium"]) + float(dishes[main]["sodium"]) + float(dishes[dessert]["sodium"])
             meals[nextID]["sugar"] = float(dishes[appetizer]["sugar"]) + float(dishes[main]["sugar"]) + float(dishes[dessert]["sugar"])
-            print(meals) #FOR DEBUGGING
+
             return nextID, 201
         
         # If one of the sent dishes does not exists
@@ -181,7 +180,7 @@ class Meal_ID(Resource):
                 meals[id]["cal"] = float(dishes[appetizer]["cal"]) + float(dishes[main]["cal"]) + float(dishes[dessert]["cal"])
                 meals[id]["sodium"] =  float(dishes[appetizer]["sodium"]) + float(dishes[main]["sodium"]) + float(dishes[dessert]["sodium"])
                 meals[id]["sugar"] = float(dishes[appetizer]["sugar"]) + float(dishes[main]["sugar"]) + float(dishes[dessert]["sugar"])
-                print(meals) #FOR DEBUGGING
+
                 return id, 201
             
             # If one of the sent dishes does not exists
@@ -225,4 +224,3 @@ api.add_resource(Meal_Name, '/meals/<string:name>')
 
 if __name__ == '__main__':
     print("running rest-word-svr-v1.py")
-    # app.run(host='0.0.0.0', port=8000, debug=True)
