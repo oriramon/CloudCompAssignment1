@@ -19,7 +19,8 @@ dishes = {
 
 #test
 meals = {
-    1: {"name": "chicken special", 
+    1: {
+    "name": "chicken special", 
     "ID": 1,
     "appetizer": 3,
     "main": 2,
@@ -27,14 +28,7 @@ meals = {
     "cal": 12,
     "sodium": 660,
     "sugar": 12.8},
-
 }
-
-# global nextID #DEBUG - nextID must be initiated 
-# TODO: 
-# error handling
-# combining multiple elements
-# handle init of nextID with empty dict
 
 class Dishes(Resource):
     # POST adds a dish of the given name. If successful, it returns the dish ID, a positive integer, and the code 201 (Resource successfully created).
@@ -93,6 +87,10 @@ class Dish_ID(Resource):
     def delete(self, id):
         if id in dishes:
             dishes.pop(id)
+            for meal in meals.values():
+                for key in ['appetizer', 'main', 'dessert']:
+                    if meal[key] == id:
+                        meal[key] = None
             return id, 200
         else:
             return -5, 404
@@ -108,6 +106,10 @@ class Dish_Name(Resource):
         for i in dishes:
             if name in dishes[i].values():
                 dishes.pop(i)
+                for meal in meals.values():
+                    for key in ['appetizer', 'main', 'dessert']:
+                        if meal[key] == id:
+                            meal[key] = None
                 return i, 200
         return -5, 404
 
